@@ -1,0 +1,19 @@
+@font-face {
+    font-family: "zai-icons";
+    src: url("./zai-icons.woff?210fea25eb9b126fc5df23b3039ee6c0") format("woff");
+}
+
+i[class^="icon-"]:before, i[class*=" icon-"]:before {
+    font-family: zai-icons !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-z-ai:before {
+    content: "\f101";
+}

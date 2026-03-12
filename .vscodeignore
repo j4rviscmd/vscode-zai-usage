@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+src/**
+.gitignore
+**/tsconfig.json
+**/*.map
+**/*.ts
+!node_modules/**
+biome.json
+.github/**
+CLAUDE.md
+assets/icons/**
+assets/fonts/*.css
+assets/fonts/*.html
+assets/fonts/*.json
+assets/fonts/*.ts
