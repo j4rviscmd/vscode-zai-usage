@@ -29,18 +29,37 @@ interface UsageData {
 const CACHE_VERSION = "1.0";
 const CACHE_KEY = "zaiUsage.cache";
 const API_KEY_SECRET = "zaiUsage.apiKey";
+const API_URL = "https://api.z.ai/api/monitor/usage/quota/limit";
 
 /**
  * Activates the extension.
  * @param context - The extension context provided by VSCode.
  */
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): void {
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     100,
   );
   statusBarItem.text = getLabel("...");
   statusBarItem.show();
+
+  let intervalId: ReturnType<typeof setInterval> | undefined;
+
+  function getRefreshInterval(): number {
+    const seconds = vscode.workspace
+      .getConfiguration("zaiUsage")
+      .get<number>("refreshInterval", 60);
+    // Clamp to a minimum of 10 seconds to prevent API flooding from invalid config values.
+    return Math.max(seconds, 10) * 1000;
+  }
+
+  function getLabel(suffix: string): string {
+    const useIcon = vscode.workspace
+      .getConfiguration("zaiUsage")
+      .get<boolean>("useIcon", true);
+    const prefix = useIcon ? "$(zai-icon)" : "z.ai:";
+    return `${prefix} ${suffix}`;
+  }
 
   function getCache(): CacheData | null {
     const cache = context.globalState.get<CacheData>(CACHE_KEY);
@@ -56,21 +75,6 @@ export function activate(context: vscode.ExtensionContext) {
       timestamp: Date.now(),
       data,
     } satisfies CacheData);
-  }
-
-  function isCacheValid(cache: CacheData | null): boolean {
-    if (!cache) {
-      return false;
-    }
-    if (Date.now() - cache.timestamp >= getRefreshInterval()) {
-      return false;
-    }
-    // キャッシュ内の nextResetTime が過去なら無効化して最新データを取得する
-    const usage = extractUsageData(cache.data);
-    if (usage?.nextResetTime && usage.nextResetTime <= Date.now()) {
-      return false;
-    }
-    return true;
   }
 
   function extractUsageData(data: ZaiApiResponse): UsageData | null {
@@ -90,16 +94,43 @@ export function activate(context: vscode.ExtensionContext) {
     };
   }
 
+  function isCacheValid(cache: CacheData | null): boolean {
+    if (!cache) {
+      return false;
+    }
+    if (Date.now() - cache.timestamp >= getRefreshInterval()) {
+      return false;
+    }
+    // キャッシュ内の nextResetTime が過去なら無効化して最新データを取得する
+    const usage = extractUsageData(cache.data);
+    if (usage?.nextResetTime && usage.nextResetTime <= Date.now()) {
+      return false;
+    }
+    return true;
+  }
+
+  function formatResetTime(nextResetTime: number | null): string {
+    if (!nextResetTime || nextResetTime <= 0) {
+      return "";
+    }
+    const diffMs = nextResetTime - Date.now();
+    if (diffMs <= 0) {
+      return "";
+    }
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffHours = Math.floor(diffSec / 3600);
+    const diffMins = Math.floor((diffSec % 3600) / 60);
+    const parts: string[] = [];
+    if (diffHours > 0) parts.push(`${diffHours}h`);
+    parts.push(`${diffMins}m`);
+    return `(${parts.join("")})`;
+  }
+
   async function fetchFromApi(apiKey: string): Promise<ZaiApiResponse | null> {
     try {
-      const response = await fetch(
-        "https://api.z.ai/api/monitor/usage/quota/limit",
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
-        },
-      );
+      const response = await fetch(API_URL, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
 
       if (!response.ok) {
         console.error(
@@ -168,55 +199,24 @@ export function activate(context: vscode.ExtensionContext) {
     return { usage: null, apiCalled: false, noApiKey: false };
   }
 
-  function getRefreshInterval(): number {
-    const seconds = vscode.workspace
-      .getConfiguration("zaiUsage")
-      .get<number>("refreshInterval", 60);
-    // Clamp to a minimum of 10 seconds to prevent API flooding from invalid config values.
-    return Math.max(seconds, 10) * 1000;
-  }
-
-  function getLabel(suffix: string): string {
-    const useIcon = vscode.workspace
-      .getConfiguration("zaiUsage")
-      .get<boolean>("useIcon", true);
-    const prefix = useIcon ? "$(zai-icon)" : "z.ai:";
-    return `${prefix} ${suffix}`;
-  }
-
-  function formatResetTime(nextResetTime: number | null): string {
-    if (!nextResetTime || nextResetTime <= 0) {
-      return "";
-    }
-    const diffMs = nextResetTime - Date.now();
-    if (diffMs <= 0) {
-      return "";
-    }
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffHours = Math.floor(diffSec / 3600);
-    const diffMins = Math.floor((diffSec % 3600) / 60);
-    const parts: string[] = [];
-    if (diffHours > 0) parts.push(`${diffHours}h`);
-    parts.push(`${diffMins}m`);
-    return `(${parts.join("")})`;
-  }
-
-  let intervalId: ReturnType<typeof setInterval> | undefined;
-
-  function startInterval() {
+  function startInterval(): void {
     if (intervalId !== undefined) {
       clearInterval(intervalId);
     }
     intervalId = setInterval(updateStatusBar, getRefreshInterval());
   }
 
-  async function updateStatusBar() {
+  function applyNoApiKeyState(): void {
+    statusBarItem.command = "zaiUsage.setApiKey";
+    statusBarItem.text = getLabel("Set API Key");
+    statusBarItem.tooltip = "Click to set your z.ai API key";
+  }
+
+  async function updateStatusBar(): Promise<void> {
     const { usage, apiCalled, noApiKey } = await fetchUsage();
 
     if (noApiKey) {
-      statusBarItem.command = "zaiUsage.setApiKey";
-      statusBarItem.text = getLabel("Set API Key");
-      statusBarItem.tooltip = "Click to set your z.ai API key";
+      applyNoApiKeyState();
     } else if (usage === null) {
       statusBarItem.command = undefined;
       statusBarItem.text = getLabel("-");
@@ -279,9 +279,7 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       await context.secrets.delete(API_KEY_SECRET);
       await context.globalState.update(CACHE_KEY, undefined);
-      statusBarItem.command = "zaiUsage.setApiKey";
-      statusBarItem.text = getLabel("Set API Key");
-      statusBarItem.tooltip = "Click to set your z.ai API key";
+      applyNoApiKeyState();
       vscode.window.showInformationMessage("z.ai Usage: API key cleared.");
     },
   );
@@ -314,4 +312,4 @@ export function activate(context: vscode.ExtensionContext) {
  * Deactivates the extension.
  * Called when VSCode is shutting down or the extension is disabled.
  */
-export function deactivate() {}
+export function deactivate(): void {}
