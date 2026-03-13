@@ -65,9 +65,13 @@ const API_URL = "https://api.z.ai/api/monitor/usage/quota/limit";
  * @param context - The extension context provided by VSCode.
  */
 export function activate(context: vscode.ExtensionContext): void {
+  const priority = vscode.workspace
+    .getConfiguration("zaiUsage")
+    .get<number>("statusBarPriority", 10000);
+
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
-    100,
+    priority,
   );
   statusBarItem.text = getLabel("...");
   statusBarItem.show();
@@ -461,6 +465,10 @@ export function activate(context: vscode.ExtensionContext): void {
      * When `zaiUsage.refreshInterval` or `zaiUsage.useIcon` changes, the status bar
      * is refreshed and the polling interval is restarted so the new settings take
      * effect without requiring a window reload.
+     *
+     * When `zaiUsage.statusBarPriority` changes, the user is notified that a window
+     * reload is required for the new priority to take effect, because the priority is
+     * set at status bar item creation time and cannot be changed at runtime.
      */
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (
@@ -469,6 +477,19 @@ export function activate(context: vscode.ExtensionContext): void {
       ) {
         updateStatusBar();
         startInterval();
+      }
+      if (e.affectsConfiguration("zaiUsage.statusBarPriority")) {
+        void (async () => {
+          const selection = await vscode.window.showInformationMessage(
+            "z.ai Usage: Status bar priority changed. Reload the window to apply.",
+            "Reload Window",
+          );
+          if (selection === "Reload Window") {
+            await vscode.commands.executeCommand(
+              "workbench.action.reloadWindow",
+            );
+          }
+        })();
       }
     }),
     {
