@@ -66,6 +66,11 @@
           "type": "boolean",
           "default": true,
           "description": "Use z.ai icon in status bar instead of text label 'z.ai:'"
+        },
+        "zaiUsage.statusBarPriority": {
+          "type": "number",
+          "default": 10000,
+          "description": "Priority of the z.ai Usage item in the status bar (higher = further left among right-aligned items). Change takes effect after reloading the window."
         }
       }
     }
