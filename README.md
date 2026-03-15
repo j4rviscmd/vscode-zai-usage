@@ -8,7 +8,8 @@
 [![Last Commit](https://img.shields.io/github/last-commit/j4rviscmd/vscode-zai-usage/main?style=for-the-badge&color=1F6FEB&label=Last%20Update&logo=git&logoColor=white)](https://github.com/j4rviscmd/vscode-zai-usage/commits/main)
 [![License](https://img.shields.io/badge/License-MIT-018FF5?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 
-## Display your [z.ai](https://z.ai) token usage percentage directly in the VS Code status bar
+<!-- markdownlint-disable-next-line -->
+### Display your [GLM Coding Plan](https://z.ai/subscribe) usage percentage directly in the VS Code status bar
 
 </div>
 
