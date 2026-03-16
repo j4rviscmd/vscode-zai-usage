@@ -71,6 +71,16 @@
           "type": "number",
           "default": 10000,
           "description": "Priority of the z.ai Usage item in the status bar (higher = further left among right-aligned items). Change takes effect after reloading the window."
+        },
+        "zaiUsage.displayMode": {
+          "type": "string",
+          "enum": ["usage", "remaining"],
+          "default": "usage",
+          "enumDescriptions": [
+            "Display token usage (e.g. 75.3%)",
+            "Display remaining tokens (e.g. 24.7%)"
+          ],
+          "description": "Whether to display token usage or remaining tokens in the status bar."
         }
       }
     }

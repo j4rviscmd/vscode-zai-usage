@@ -15,7 +15,7 @@
 
 ## Features
 
-- Shows token quota usage (e.g. `45% (2h30m)`) in the status bar
+- Shows token quota usage (e.g. `45% (2h30m)`) or remaining tokens (e.g. `55% (2h30m)`) in the status bar
 - Displays time remaining until quota resets when available
 - Automatically refreshes at a configurable interval
 - Secure API key storage via VS Code Secret Storage
@@ -26,10 +26,11 @@
 | ------------------------------ | --------------- |
 | Authenticated, usage available | `⬡ 45% (2h30m)` |
 | Authenticated, no reset time   | `⬡ 45%`         |
+| Authenticated, remaining mode  | `⬡ 55% (2h30m)` |
 | API key not set                | `⬡ Set API Key` |
 | Error / fetch failed           | `⬡ -`           |
 
-> The `⬡` icon is the z.ai icon. Set `zaiUsage.useIcon: false` to display `z.ai:` as a text prefix instead.
+> The `⬡` icon is the z.ai icon. Set `zaiUsage.useIcon: false` to display `z.ai:` as a text prefix instead. Set `zaiUsage.displayMode: "remaining"` to show remaining tokens instead of usage.
 
 ## Setup
 
@@ -47,10 +48,11 @@
 
 ## Settings
 
-|          Setting           |   Type    | Default |                    Description                     |
-| -------------------------- | --------- | ------- | -------------------------------------------------- |
-| `zaiUsage.refreshInterval` | `number`  | `60`    | Data refresh interval in seconds                   |
-| `zaiUsage.useIcon`         | `boolean` | `true`  | Use z.ai icon (`⬡`) instead of text prefix `z.ai:` |
+|          Setting           |   Type    | Default |                                     Description                                      |
+| -------------------------- | --------- | ------- | ------------------------------------------------------------------------------------ |
+| `zaiUsage.refreshInterval` | `number`  | `60`    | Data refresh interval in seconds                                                     |
+| `zaiUsage.useIcon`         | `boolean` | `true`  | Use z.ai icon (`⬡`) instead of text prefix `z.ai:`                                   |
+| `zaiUsage.displayMode`     | `string`  | `usage` | Display mode: `"usage"` (e.g. `75.3%`) or `"remaining"` (e.g. `24.7%`) in status bar |
 
 ## Requirements
 
