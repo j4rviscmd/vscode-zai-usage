@@ -380,11 +380,30 @@ export function activate(context: vscode.ExtensionContext): void {
       statusBarItem.command = undefined;
       const refreshSec = getRefreshInterval() / 1000;
       const resetStr = formatResetTime(usage.nextResetTime);
+
+      // Get display mode setting (default: "usage")
+      const displayMode = vscode.workspace
+        .getConfiguration("zaiUsage")
+        .get<string>("displayMode", "usage");
+
+      // Calculate display percentage based on display mode
+      const isRemaining = displayMode === "remaining";
+      const displayPercentage = isRemaining
+        ? Math.round((100 - usage.percentage) * 10) / 10
+        : usage.percentage;
+
       const suffix = resetStr
-        ? `${usage.percentage}% ${resetStr}`
-        : `${usage.percentage}%`;
+        ? `${displayPercentage}% ${resetStr}`
+        : `${displayPercentage}%`;
       statusBarItem.text = getLabel(suffix);
-      statusBarItem.tooltip = `z.ai token usage: ${usage.percentage}%${resetStr ? ` — resets in ${resetStr.replace(/[()]/g, "")}` : ""} (auto-refreshes every ${refreshSec}s)`;
+
+      // Build tooltip text
+      const resetTooltip = resetStr
+        ? ` — resets in ${resetStr.replace(/[()]/g, "")}`
+        : "";
+      statusBarItem.tooltip =
+        `z.ai token ${displayMode}: ${displayPercentage}%${resetTooltip} ` +
+        `(auto-refreshes every ${refreshSec}s)`;
     }
 
     if (apiCalled) {
@@ -462,8 +481,8 @@ export function activate(context: vscode.ExtensionContext): void {
     /**
      * Listens for workspace configuration changes and re-applies them immediately.
      *
-     * When `zaiUsage.refreshInterval` or `zaiUsage.useIcon` changes, the status bar
-     * is refreshed and the polling interval is restarted so the new settings take
+     * When `zaiUsage.refreshInterval`, `zaiUsage.useIcon`, or `zaiUsage.displayMode` changes,
+     * the status bar is refreshed and the polling interval is restarted so the new settings take
      * effect without requiring a window reload.
      *
      * When `zaiUsage.statusBarPriority` changes, the user is notified that a window
@@ -473,7 +492,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (
         e.affectsConfiguration("zaiUsage.refreshInterval") ||
-        e.affectsConfiguration("zaiUsage.useIcon")
+        e.affectsConfiguration("zaiUsage.useIcon") ||
+        e.affectsConfiguration("zaiUsage.displayMode")
       ) {
         updateStatusBar();
         startInterval();
