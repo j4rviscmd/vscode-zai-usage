@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-16
+
+### Added
+
+- Display mode setting for usage/remaining tokens (`zaiUsage.displayMode`) — choose between percentage, absolute numbers, or both
+
+### Changed
+
+- Update README with displayMode setting documentation
+- Add GitHub workflow for adding project to codespaces
+- Update README to reference GLM Coding Plan
+- Add v0.2.0 changelog entry
+- Format codebase
+
 ## [0.2.0] - 2026-03-13
 
 ### Added
