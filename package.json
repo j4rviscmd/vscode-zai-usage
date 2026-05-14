@@ -51,6 +51,10 @@
       {
         "command": "zaiUsage.clearApiKey",
         "title": "z.ai Usage: Clear API Key"
+      },
+      {
+        "command": "zaiUsage.updateStatusBar",
+        "title": "z.ai Usage: Refresh Status Bar"
       }
     ],
     "configuration": {
