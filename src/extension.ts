@@ -373,11 +373,11 @@ export function activate(context: vscode.ExtensionContext): void {
     if (noApiKey) {
       applyNoApiKeyState();
     } else if (usage === null) {
-      statusBarItem.command = undefined;
+      statusBarItem.command = "zaiUsage.updateStatusBar";
       statusBarItem.text = getLabel("-");
-      statusBarItem.tooltip = "Unable to fetch z.ai usage data";
+      statusBarItem.tooltip = "Unable to fetch z.ai usage data (click to refresh)";
     } else {
-      statusBarItem.command = undefined;
+      statusBarItem.command = "zaiUsage.updateStatusBar";
       const refreshSec = getRefreshInterval() / 1000;
       const resetStr = formatResetTime(usage.nextResetTime);
 
@@ -403,7 +403,8 @@ export function activate(context: vscode.ExtensionContext): void {
         : "";
       statusBarItem.tooltip =
         `z.ai token ${displayMode}: ${displayPercentage}%${resetTooltip} ` +
-        `(auto-refreshes every ${refreshSec}s)`;
+        `\n(auto-refreshes every ${refreshSec}s. click to refresh immediately)`;
+        
     }
 
     if (apiCalled) {
@@ -432,7 +433,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return;
       }
 
-      statusBarItem.text = getLabel("Verifying...");
+      statusBarItem.text = getLabel("$(loading~spin) Verifying...");
       const result = await fetchFromApi(apiKey);
 
       if (result === null) {
@@ -471,6 +472,24 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   );
 
+  /**
+   * Handles the `zaiUsage.updateStatusBar` command.
+   *
+   * Manually refreshes the status bar by calling {@link updateStatusBar}.
+   * This command can be bound to the status bar item or triggered via command palette.
+   *
+   * Shows a loading indicator for at least 400ms to prevent flickering.
+   */
+  const updateStatusBarCmd = vscode.commands.registerCommand(
+    "zaiUsage.updateStatusBar",
+    async () => {
+      statusBarItem.text = "$(loading~spin) Refreshing...";
+      // Wait at least 400ms to prevent flickering
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await updateStatusBar();
+    },
+  );
+
   updateStatusBar();
   startInterval();
 
@@ -478,6 +497,7 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBarItem,
     setApiKeyCmd,
     clearApiKeyCmd,
+    updateStatusBarCmd,
     /**
      * Listens for workspace configuration changes and re-applies them immediately.
      *
