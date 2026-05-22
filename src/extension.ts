@@ -375,7 +375,8 @@ export function activate(context: vscode.ExtensionContext): void {
     } else if (usage === null) {
       statusBarItem.command = "zaiUsage.updateStatusBar";
       statusBarItem.text = getLabel("-");
-      statusBarItem.tooltip = "Unable to fetch z.ai usage data (click to refresh)";
+      statusBarItem.tooltip =
+        "Unable to fetch z.ai usage data (click to refresh)";
     } else {
       statusBarItem.command = "zaiUsage.updateStatusBar";
       const refreshSec = getRefreshInterval() / 1000;
@@ -404,7 +405,6 @@ export function activate(context: vscode.ExtensionContext): void {
       statusBarItem.tooltip =
         `z.ai token ${displayMode}: ${displayPercentage}%${resetTooltip} ` +
         `\n(auto-refreshes every ${refreshSec}s. click to refresh immediately)`;
-        
     }
 
     if (apiCalled) {
